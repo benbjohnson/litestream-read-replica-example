@@ -1,0 +1,6 @@
+addr: ":9090"
+
+dbs:
+  - path: $DSN
+    upstream:
+      url: http://${FLY_PRIMARY_REGION}.litestream-read-replica-example.internal:9090

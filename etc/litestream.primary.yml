@@ -1,0 +1,6 @@
+addr: ":9090"
+
+dbs:
+  - path: $DSN
+    replicas:
+      - url: ${REPLICA_URL}

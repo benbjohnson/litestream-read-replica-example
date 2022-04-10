@@ -29,11 +29,13 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("flag required: -dsn DSN")
 	}
 
-	// Ensure primary region & current region are both set via env vars.
-	if os.Getenv("FLY_REGION") == "" {
+	// Ensure app name, primary region & current region are both set via env vars.
+	if os.Getenv("FLY_APP_NAME") == "" {
+		return fmt.Errorf("FLY_APP_NAME must be set")
+	} else if os.Getenv("FLY_REGION") == "" {
 		return fmt.Errorf("FLY_REGION must be set")
-	} else if os.Getenv("PRIMARY_FLY_REGION") == "" {
-		return fmt.Errorf("PRIMARY_FLY_REGION must be set")
+	} else if os.Getenv("FLY_PRIMARY_REGION") == "" {
+		return fmt.Errorf("FLY_PRIMARY_REGION must be set")
 	}
 
 	// Set "readonly" mode if this is a replica.
@@ -123,7 +125,7 @@ func (h *Handler) servePost(w http.ResponseWriter, r *http.Request) {
 	// If this is not the primary, redirect to the primary.
 	if !isPrimary() {
 		log.Printf("redirecting to primary")
-		w.Header().Set("fly-replay", "region="+os.Getenv("PRIMARY_FLY_REGION"))
+		w.Header().Set("fly-replay", "region="+os.Getenv("FLY_PRIMARY_REGION"))
 		return
 	}
 
@@ -155,5 +157,5 @@ func (h *Handler) servePost(w http.ResponseWriter, r *http.Request) {
 
 // isPrimary returns true if the current region is the primary region.
 func isPrimary() bool {
-	return os.Getenv("PRIMARY_FLY_REGION") == os.Getenv("FLY_REGION")
+	return os.Getenv("FLY_PRIMARY_REGION") == os.Getenv("FLY_REGION")
 }

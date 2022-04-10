@@ -6,7 +6,9 @@ FROM litestream/litestream:0.4.0-beta.2 AS litestream
 FROM golang:1.17 as builder
 COPY . /src/litestream-read-replica-example
 WORKDIR /src/litestream-read-replica-example
-RUN go build -ldflags '-s -w -extldflags "-static"' -tags osusergo,netgo,sqlite_omit_load_extension -o /usr/local/bin/litestream-read-replica-example .
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	--mount=type=cache,target=/go/pkg \
+	go build -ldflags '-s -w -extldflags "-static"' -tags osusergo,netgo,sqlite_omit_load_extension -o /usr/local/bin/litestream-read-replica-example .
 
 
 # This is where our final stage of the Docker build begins.
@@ -15,7 +17,6 @@ FROM alpine
 
 # Set environment variables.
 ENV DSN "/data/db"
-ENV REPLICA_URL ""
 
 EXPOSE 8080
 
@@ -27,6 +28,7 @@ COPY --from=litestream /usr/local/bin/litestream /usr/local/bin/litestream
 # We will choose which one we use based at runtime.
 ADD etc/litestream.primary.yml /etc/litestream.primary.yml
 ADD etc/litestream.replica.yml /etc/litestream.replica.yml
+ADD run.sh /run.sh
 
 # We add sqlite so we can create an empty database for our replica to start with.
 # Add bash & cURL in case we want to ssh into our image. These are not necessary.
